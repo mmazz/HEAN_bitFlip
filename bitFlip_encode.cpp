@@ -65,12 +65,12 @@ int main(int argc, char *argv[])
         Scheme scheme(sk, context);
 
         Plaintext plain_original = scheme.encode(vals, slots, logP, logQ);
-        std::cout << vals[0] << " " << plain_original.mx[0] << std::endl;
         Plaintext plain = scheme.encode(vals, slots, logP, logQ);
         int count = 0;
         for (size_t i=0; i<ringDim; i++)
            count+= plain_original.mx[i]!=plain.mx[i];
-        //std::cout << "Equal plaintexts? " << count  << std::endl;
+        if (count>0)
+            std::cout << "Not Equal plaintexts: " << count  << std::endl;
 
         int max = 0;
         for (size_t i=0; i<ringDim; i++)
@@ -85,7 +85,7 @@ int main(int argc, char *argv[])
         Ciphertext cipher = scheme.encryptMsg(plain, seed);
         complex<double>* dvec = scheme.decrypt(sk, cipher);
         complex<double>* golden_val = scheme.decrypt(sk, cipher);
-        double golden_norm = norm2(vals, golden_val, slots);
+        double golden_norm = norm2(golden_val, vals, slots);
 
         if (golden_norm<0.1)
         {

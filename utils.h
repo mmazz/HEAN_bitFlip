@@ -51,13 +51,13 @@ inline double norm2(std::complex<double>* vecInput, std::complex<double>* vecOut
     return res;
 }
 
-inline double norm2(double* vecInput, std::complex<double>* vecOutput, size_t size){
+inline double norm2(std::complex<double>* vecInput, double* vecOutput, size_t size){
     double res = 0;
     double diff = 0;
     // Itero sobre el del input por si el del output por construccion quedo mas grande
     for (size_t i=0; i<size; i++)
     {
-        diff = vecOutput[i].real() - vecInput[i];
+        diff = vecOutput[i] - vecInput[i].real();
         res += pow(diff, 2);
     }
     res = std::sqrt(res/size);

@@ -77,7 +77,7 @@ plt.savefig(prolog+f"{savename}.jpg", bbox_inches='tight')
 plt.legend()
 plt.show()
 plt.clf()
-
+a
 
 print("Diff")
 df_DIFF = pd.read_csv(dir+fileDiff, header=None, skip_blank_lines=False, dtype='float64')
