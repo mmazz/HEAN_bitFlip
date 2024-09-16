@@ -51,15 +51,33 @@ inline double norm2(std::complex<double>* vecInput, std::complex<double>* vecOut
     return res;
 }
 
-inline double norm2(std::complex<double>* vecInput, double* vecOutput, size_t size){
+inline double norm2(double* vecInput, std::complex<double>* vecOutput, size_t size){
     double res = 0;
     double diff = 0;
     // Itero sobre el del input por si el del output por construccion quedo mas grande
     for (size_t i=0; i<size; i++)
     {
-        diff = vecOutput[i] - vecInput[i].real();
+        diff = vecOutput[i].real() - vecInput[i];
         res += pow(diff, 2);
     }
     res = std::sqrt(res/size);
     return res;
 }
+
+inline void diff_elements(std::complex<double>*  &vecInput, std::complex<double>* &vecOutput, std::vector<uint64_t> &res){
+    double diff = 0;
+    uint64_t ires = 0;
+    size_t size = res.size();
+    // Itero sobre el del input por si el del output por construccion quedo mas grande
+    for (size_t i=0; i<size; i++)
+    {
+        diff = abs(vecInput[i].real() - vecOutput[i].real());
+        if (diff < 0.000001)
+            ires = 0;
+        else
+            ires = (uint64_t)(diff+0.5); // sumo 0.5 para que sea redondeo y no truncar
+        res[i] = ires;
+    }
+}
+
+

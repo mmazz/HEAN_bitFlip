@@ -18,9 +18,9 @@ if n>3:
     logP = int(sys.argv[3])
 ringDim = 2**logN
 batchSize = ringDim//2
-num_bitsPerCoeff = 64
+num_bitsPerCoeff = logQ+logP+4
 RNS_size = 1
-seeds = 10
+seeds = 30
 input_seeds = 1
 
 SMALL_SIZE = 12
@@ -50,7 +50,7 @@ num_bits = num_coeff * num_bitsPerCoeff
 
 labels = [str(0), str(num_bitsPerCoeff)]
 for i in range(2, num_coeff+1):
-    labels.append(str(i)+f"*{num_bitsPerCoeff}")
+    labels.append(str(i)+f"x{num_bitsPerCoeff}")
 
 xticks_label = np.arange(0, num_bits+1, num_bitsPerCoeff)
 print(xticks_label)
@@ -60,6 +60,7 @@ print("N2")
 savename = f"N2_{logN}_{num_bitsPerCoeff}"
 x0 = np.arange(0, num_bitsPerCoeff*ringDim,1)
 x1 = np.arange(num_bitsPerCoeff*ringDim, 2*num_bitsPerCoeff*ringDim,1)
+
 df_N2_C0 = pd.read_csv(dir+fileN2_C0, header=None, skip_blank_lines=False)
 dataN2_C0 = df_N2_C0.to_numpy(dtype='float64')
 stdN2_C0 = np.std(dataN2_C0, axis=0)
@@ -75,7 +76,8 @@ plt.plot(x1,  dataN2_mean_C1, linewidth=width, color='firebrick', label="Delta =
 #plt.scatter(x,  dataN2_mean_30, linewidth=width, label="Delta = 25")
 plt.errorbar(x0, dataN2_mean_C0, stdN2_C0, linestyle='None', marker='^', color="orange")
 plt.errorbar(x1, dataN2_mean_C1, stdN2_C1, linestyle='None', marker='^', color="orange")
-plt.ylabel('Norm2 ', color='green')
+plt.ylabel('Norm2')
+
 plt.xlabel('Bit changed')
 plt.xticks(xticks_label , labels, rotation=45)
 plt.savefig(prolog+f"{savename}.pdf", bbox_inches='tight')

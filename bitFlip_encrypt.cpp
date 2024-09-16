@@ -33,18 +33,21 @@ int main(int argc, char *argv[])
 
     long logSlots = logN - 1;
 	long slots = pow(2, logSlots);
+    //slots = slots >> 1;
     std::cout << "logN: " << logN << " Slots: " << slots << " Ringdim: " << ringDim << " slots: " << slots<< std::endl;
-    size_t loops = 30;
     string prelog = "logs/log_encrypt/smallEncryptN2_";
     string fileC0 = to_string(logN) + "_" + to_string(logQ) + "_" + to_string(logP)+ "_C0.txt";
-    string fileC1 = to_string(logN) + "_" + to_string(logQ) + "_" + to_string(logP)+ "_C01txt";
+    string fileC1 = to_string(logN) + "_" + to_string(logQ) + "_" + to_string(logP)+ "_C1.txt";
     ofstream norm2FileC0(prelog+fileC0);
     ofstream norm2FileC1(prelog+fileC1);
-    for (size_t k=0; k<loops; k++)
+    std::ostringstream buffer;
+    size_t loops = 30;
+    for (size_t k=1; k<loops+1; k++)
     {
         NTL::ZZ seed;
         seed = k;  // Set your desired seed value
         NTL::SetSeed(seed);
+        std::srand(k);
         //complex<double>* vals = EvaluatorUtils::randomComplexArray(slots);
         //double* vals = EvaluatorUtils::randomRealArray(slots);
         double* vals = new double[slots];
@@ -85,42 +88,45 @@ int main(int argc, char *argv[])
 
         if (golden_norm<0.1)
         {
-            std::string normsC0;
+            double count = 0;
             for (size_t i=0; i<ringDim; i++)
             {
                 for (size_t bit=0; bit<word; bit++)
                 {
+                    if(count>0)
+                        buffer << ", ";
                     cipher = scheme.encryptMsg(plain, seed);
                     cipher.bx[i] = bit_flip(cipher.bx[i], bit);
                     dvec = scheme.decrypt(sk, cipher);
                     double norm = norm2(golden_val, dvec, slots);
-                    normsC0.append(to_string(norm));
-                    normsC0.append(", ");
+                    buffer << norm;
+                    count++;
                 }
             }
-            normsC0.pop_back();
-            normsC0.pop_back();
-            normsC0.append("\n");
-            norm2FileC0 << normsC0;
+            buffer << "\n";
+            norm2FileC0 << buffer.str();  // Write the buffer to file
+            buffer.str("");        // Clear the buffer
+            buffer.clear();
 
-            std::string normsC1;
+            count = 0;
             for (size_t i=0; i<ringDim; i++)
             {
                 for (size_t bit=0; bit<word; bit++)
                 {
+                    if(count>0)
+                        buffer << ", ";
                     cipher = scheme.encryptMsg(plain, seed);
                     cipher.ax[i] = bit_flip(cipher.ax[i], bit);
                     dvec = scheme.decrypt(sk, cipher);
                     double norm = norm2(golden_val, dvec, slots);
-                    normsC1.append(to_string(norm));
-                    normsC1.append(", ");
+                    buffer << norm;
+                    count++;
                 }
             }
-            normsC1.pop_back();
-            normsC1.pop_back();
-            normsC1.append("\n");
-            norm2FileC1 << normsC1;
-
+            buffer << "\n";
+            norm2FileC1 << buffer.str();  // Write the buffer to file
+            buffer.str("");        // Clear the buffer
+            buffer.clear();
         }
         else
             std::cout<< "ERROR!" << std::endl;
