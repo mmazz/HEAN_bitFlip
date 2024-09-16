@@ -6,6 +6,25 @@ import numpy as np
 from matplotlib.ticker import PercentFormatter
 import seaborn as sns
 
+n = len(sys.argv)
+logN = 4
+if n >1 :
+    logN = int(sys.argv[1])
+
+logQ = 35
+if n>2:
+    logQ = int(sys.argv[2])
+
+logP = 25
+if n>3:
+    logP = int(sys.argv[3])
+ringDim = 2**logN
+batchSize = ringDim//2
+num_bitsPerCoeff = 64
+RNS_size = 1
+seeds = 10
+input_seeds = 1
+
 SMALL_SIZE = 12
 MEDIUM_SIZE = 16
 BIGGER_SIZE = 20
@@ -18,17 +37,12 @@ plt.rc('ytick', labelsize=MEDIUM_SIZE)    # fontsize of the tick labels
 plt.rc('legend', fontsize=SMALL_SIZE)    # legend fontsize
 plt.rc('figure', titlesize=BIGGER_SIZE)  # fontsize of the figure title
 dir     = "logs/log_encode/"
-fileN2_30     = "smallEncodeN2_30.txt"
+
+fileN2     = f"smallEncodeN2_{logN}_{logQ}_{logP}.txt"
 extra   = ""
 prolog = "img/smallEncode"
 show = True
 
-ringDim = 2**2
-batchSize = ringDim//2
-num_bitsPerCoeff = 40
-RNS_size = 1
-seeds = 10
-input_seeds = 1
 loops = seeds * input_seeds
 
 num_coeff = int(ringDim*RNS_size)
@@ -44,14 +58,14 @@ print(xticks_label)
 width = 5
 ##############################################################################
 print("N2")
-savename = "N2_25"
-df_N2 = pd.read_csv(dir+fileN2_30, header=None, skip_blank_lines=False)
-dataN2_30 = df_N2.to_numpy(dtype='float64')
-stdN2 = np.std(dataN2_30, axis=0)
-dataN2_mean_30 = np.mean(dataN2_30, axis=0)
-print(len(dataN2_mean_30))
+savename = f"N2_{logN}_{num_bitsPerCoeff}"
+df_N2 = pd.read_csv(dir+fileN2, header=None, skip_blank_lines=False)
+dataN2 = df_N2.to_numpy(dtype='float64')
+stdN2 = np.std(dataN2, axis=0)
+dataN2_mean = np.mean(dataN2, axis=0)
+print(len(dataN2_mean))
 x = np.arange(0, num_bitsPerCoeff*ringDim,1)
-plt.plot(x,  dataN2_mean_30, linewidth=width, label="Delta = 25")
+plt.plot(x,  dataN2_mean, linewidth=width, label="Delta = 25")
 #plt.scatter(x,  dataN2_mean_30, linewidth=width, label="Delta = 25")
 #plt.errorbar(x, dataN2_mean_30, stdN2, linestyle='None', marker='^', color="orange")
 plt.ylabel('Norm2 ', color='green')
