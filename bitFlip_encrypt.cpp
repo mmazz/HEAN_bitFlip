@@ -41,7 +41,48 @@ int main(int argc, char *argv[])
     ofstream norm2FileC0(prelog+fileC0);
     ofstream norm2FileC1(prelog+fileC1);
     std::ostringstream buffer;
-    size_t loops = 30;
+    size_t loops = 10;
+
+    int max = 0;
+    for (size_t k=1; k<loops+1; k++)
+    {
+        NTL::ZZ seed;
+        seed = k;  // Set your desired seed value
+        NTL::SetSeed(seed);
+        std::srand(k);
+        //complex<double>* vals = EvaluatorUtils::randomComplexArray(slots);
+        //double* vals = EvaluatorUtils::randomRealArray(slots);
+        double* vals = new double[slots];
+        for (uint32_t i=0; i<slots; i++)
+            vals[i] = ((double)rand())/RAND_MAX * MAX - MIN;
+
+        // Key Generation
+        Context context(logN, logQ);
+        SecretKey sk(logN, h);
+        Scheme scheme(sk, context);
+
+        Plaintext plain = scheme.encode(vals, slots, logP, logQ);
+
+        std::cout << std::endl;
+        Ciphertext cipher = scheme.encryptMsg(plain, seed);
+        int local_max = 0;
+        for (size_t i=0; i<ringDim; i++)
+        {
+            auto temp = NTL::NumBits(cipher.ax[i]);
+            if(temp>local_max)
+                local_max=temp;
+
+            temp = NTL::NumBits(cipher.bx[i]);
+            if(temp>local_max)
+                local_max=temp;
+        }
+
+        if(local_max>max)
+            max = local_max;
+    }
+
+    std::cout << "Max bits " << max << std::endl;
+    std::cout << std::endl;
     for (size_t k=1; k<loops+1; k++)
     {
         NTL::ZZ seed;
@@ -71,16 +112,9 @@ int main(int argc, char *argv[])
            count+= plain_original.mx[i]!=plain.mx[i];
         //std::cout << "Equal plaintexts? " << count  << std::endl;
 
-//        for (size_t i=0; i<ringDim; i++)
-//        {
-//            auto temp = NTL::NumBits(plain.mx[i]);
-//            if(temp>word)
-//                word =temp;
-//        }
-//        std::cout << "Max bits " << word << std::endl;
-//        word=40;
 
         Ciphertext cipher = scheme.encryptMsg(plain, seed);
+
         complex<double>* dvec = scheme.decrypt(sk, cipher);
         complex<double>* golden_val = scheme.decrypt(sk, cipher);
         double golden_norm = norm2(golden_val, vals, slots);
@@ -91,12 +125,12 @@ int main(int argc, char *argv[])
             double count = 0;
             for (size_t i=0; i<ringDim; i++)
             {
-                for (size_t bit=0; bit<word; bit++)
+                for (size_t bit=0; bit<max; bit++)
                 {
                     if(count>0)
                         buffer << ", ";
                     cipher = scheme.encryptMsg(plain, seed);
-                    cipher.bx[i] = bit_flip(cipher.bx[i], bit);
+                    cipher.bx[i] = bit_flip(cipher.bx[i], bit, max);
                     dvec = scheme.decrypt(sk, cipher);
                     double norm = norm2(golden_val, dvec, slots);
                     buffer << norm;
@@ -111,12 +145,12 @@ int main(int argc, char *argv[])
             count = 0;
             for (size_t i=0; i<ringDim; i++)
             {
-                for (size_t bit=0; bit<word; bit++)
+                for (size_t bit=0; bit<max; bit++)
                 {
                     if(count>0)
                         buffer << ", ";
                     cipher = scheme.encryptMsg(plain, seed);
-                    cipher.ax[i] = bit_flip(cipher.ax[i], bit);
+                    cipher.ax[i] = bit_flip(cipher.ax[i], bit, max);
                     dvec = scheme.decrypt(sk, cipher);
                     double norm = norm2(golden_val, dvec, slots);
                     buffer << norm;

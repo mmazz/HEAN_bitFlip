@@ -18,9 +18,9 @@ if n>3:
     logP = int(sys.argv[3])
 ringDim = 2**logN
 batchSize = ringDim//2
-num_bitsPerCoeff = logQ+logP+4
+num_bitsPerCoeff = 35#logQ+logP+4
 RNS_size = 1
-seeds = 30
+seeds = 10
 input_seeds = 1
 
 SMALL_SIZE = 12

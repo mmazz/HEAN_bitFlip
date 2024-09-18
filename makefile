@@ -15,6 +15,9 @@ bitFlip_encode: utils bitFlip_encode.cpp
 bitFlip_encrypt: utils bitFlip_encrypt.cpp
 	g++ bitFlip_encrypt.cpp -o bitFlip_encrypt -L/usr/local/lib ../lib/libHEAAN.a -lntl -lgmp -lm -std=c++11 -O2 -I/../src -pthread
 
+test: utils test.cpp
+	g++ test.cpp -o test -L/usr/local/lib ../lib/libHEAAN.a -lntl -lgmp -lm -std=c++11 -O2 -I/../src -pthread
+
 utils:
 	g++ utils.h -c utils.o
 

@@ -25,7 +25,6 @@ int main(int argc, char *argv[])
     long logP = 25;
     if (argc>3)
         logP = std::stol(argv[3]);
-    size_t word = ( logQ + logP + 6);
     long h = pow(2, logN);
     if (h>64)
         h = 64;
@@ -33,19 +32,70 @@ int main(int argc, char *argv[])
 
     long logSlots = logN - 1;
 	long slots = pow(2, logSlots);
-    //slots = slots >> 1;
+
     std::cout << "logN: " << logN << " Slots: " << slots << " Ringdim: " << ringDim << " slots: " << slots<< std::endl;
     string prelog = "logs/log_encode/smallEncode";
+    if (argc>5 && std::stoi(argv[5])>=1)
+    {
+        slots = slots >> std::stoi(argv[5]);
+        prelog = "logs/log_encode/smallEncode_smallBatch";
+    }
     string fileN2 = "N2_"+to_string(logN) + "_" + to_string(logQ) + "_" + to_string(logP)+ ".txt";
+    string fileN2_real = "N2_real_"+to_string(logN) + "_" + to_string(logQ) + "_" + to_string(logP)+ ".txt";
     string fileDiff = "Diff_"+to_string(logN) + "_" + to_string(logQ) + "_" + to_string(logP)+ ".txt";
     ofstream norm2File(prelog+fileN2);
+    ofstream norm2_realFile(prelog+fileN2_real);
     ofstream diffFile(prelog+fileDiff);
     double* vals = new double[slots];
     std::ostringstream bufferN2;
+    std::ostringstream bufferN2_real;
     std::ostringstream bufferDiff;
     size_t loops = 10;
+    if (argc>4)
+        loops = std::stoi(argv[4]);
+    int max = 0;
+    ZZ delta = ZZ(0);
+    ZZ temp_delta = ZZ(0);
     for (size_t k=1; k<loops+1; k++)
     {
+        NTL::ZZ seed;
+        seed = k;  // Set your desired seed value
+        NTL::SetSeed(seed);
+        std::srand(k);
+        //complex<double>* vals = EvaluatorUtils::randomComplexArray(slots);
+        //double* vals = EvaluatorUtils::randomRealArray(slots);
+        double* vals = new double[slots];
+        for (uint32_t i=0; i<slots; i++)
+            vals[i] = ((double)rand())/RAND_MAX * MAX - MIN;
+
+        // Key Generation
+        Context context(logN, logQ);
+        SecretKey sk(logN, h);
+        Scheme scheme(sk, context);
+
+        Plaintext plain = scheme.encode(vals, slots, logP, logQ);
+        temp_delta = context.logQ + logP;
+        delta += temp_delta;
+        int local_max = 0;
+        for (size_t i=0; i<ringDim; i++)
+        {
+            auto temp = NTL::NumBits(plain.mx[i]);
+            if(temp>local_max)
+                local_max=temp;
+
+        }
+        if(local_max>max)
+            max = local_max;
+    }
+    delta = delta/ loops;
+    std::cout << "Delta " << delta << std::endl;
+    uint16_t word = max;
+    std::cout << "Max bits " << word << std::endl;
+    std::cout << std::endl;
+    norm2File << logN << ", " << logQ << ", " << logP << ", " << delta << ", " << word << ", " << loops <<std::endl;  // Write the buffer to file
+    for (size_t k=1; k<loops+1; k++)
+    {
+        std::cout << k << std::endl;
         NTL::ZZ seed;
         seed = k;  // Set your desired seed value
         NTL::SetSeed(seed);
@@ -54,9 +104,7 @@ int main(int argc, char *argv[])
  //       double* vals = EvaluatorUtils::randomRealArray(slots);
         for (uint32_t i=0; i<slots; i++)
             vals[i] = ((double)rand())/RAND_MAX * MAX - MIN;
-//        for (int i=0 ; i<(int)slots;i++)
-//            std::cout<<vals[i] <<" ";
-//        std::cout<<std::endl;
+
         std::vector<uint64_t> DIFFVec(slots, 0);
 
         // Key Generation
@@ -66,26 +114,16 @@ int main(int argc, char *argv[])
 
         Plaintext plain_original = scheme.encode(vals, slots, logP, logQ);
         Plaintext plain = scheme.encode(vals, slots, logP, logQ);
-        int count = 0;
+        int num_changes = 0;
         for (size_t i=0; i<ringDim; i++)
-           count+= plain_original.mx[i]!=plain.mx[i];
-        if (count>0)
-            std::cout << "Not Equal plaintexts: " << count  << std::endl;
-
-        int max = 0;
-        for (size_t i=0; i<ringDim; i++)
-        {
-            auto temp = NTL::NumBits(plain.mx[i]);
-            if(temp>max)
-                max=temp;
-        }
-        std::cout << "Max bits " << max << std::endl;
-//        word=40;
+           num_changes+= plain_original.mx[i]!=plain.mx[i];
+        if (num_changes>0)
+            std::cout << "Not Equal plaintexts: " << num_changes  << std::endl;
 
         Ciphertext cipher = scheme.encryptMsg(plain, seed);
         complex<double>* dvec = scheme.decrypt(sk, cipher);
         complex<double>* golden_val = scheme.decrypt(sk, cipher);
-        double golden_norm = norm2(golden_val, vals, slots);
+        double golden_norm = norm2_real(golden_val, vals, slots);
 
         if (golden_norm<0.1)
         {
@@ -98,16 +136,19 @@ int main(int argc, char *argv[])
                     if(count>0)
                     {
                         bufferN2 << ", ";
+                        bufferN2_real << ", ";
                         bufferDiff << ", ";
                     }
                     plain.mx[i] = bit_flip(plain.mx[i], bit);
                     cipher = scheme.encryptMsg(plain, seed);
                     dvec = scheme.decrypt(sk, cipher);
                     double norm = norm2(golden_val, dvec, slots);
+                    double norm_real = norm2_real(golden_val, dvec, slots);
                     diff_elements(golden_val, dvec, DIFFVec);
-
                     plain.mx[i] = plain_coeff;
+
                     bufferN2 << norm;
+                    bufferN2_real << norm_real;
                     count++;
                     for (size_t k=0; k<slots-1; k++)
                     {
@@ -121,6 +162,11 @@ int main(int argc, char *argv[])
             bufferN2.str("");        // Clear the buffer
             bufferN2.clear();
 
+            bufferN2_real << "\n";
+            norm2_realFile << bufferN2_real.str();  // Write the buffer to file
+            bufferN2_real.str("");        // Clear the buffer
+            bufferN2_real.clear();
+
             bufferDiff << "\n";
             diffFile << bufferDiff.str();  // Write the buffer to file
             bufferDiff.str("");        // Clear the buffer
@@ -131,6 +177,7 @@ int main(int argc, char *argv[])
     }
     delete[] vals;
     norm2File.close();
+    norm2_realFile.close();
     diffFile.close();
 
     return 0;
