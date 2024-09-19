@@ -1,4 +1,4 @@
-#include "utils.h"
+#include "utils.cpp"
 #include "../src/HEAAN.h"
 #include <cmath>
 using namespace std;
