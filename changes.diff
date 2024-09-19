@@ -1,0 +1,48 @@
+diff '--color=auto' -ur src/Scheme.cpp src-mod/Scheme.cpp
+--- src/Scheme.cpp	2018-09-03 03:01:11.000000000 -0300
++++ src-mod/Scheme.cpp	2024-09-19 12:52:13.436811663 -0300
+@@ -149,9 +149,31 @@
+ //----------------------------------------------------------------------------------
+ //   ENCRYPTION & DECRYPTION
+ //----------------------------------------------------------------------------------
++//
++Ciphertext Scheme::encryptMsg(Plaintext& msg) {
++	ZZX ax, bx, vx, ex;
++	Key key = keyMap.at(ENCRYPTION);
++	ZZ qQ = context.qpowvec[msg.logq + context.logQ];
+ 
++	NumUtils::sampleZO(vx, context.N);
++	Ring2Utils::mult(ax, vx, key.ax, qQ, context.N);
++	NumUtils::sampleGauss(ex, context.N, context.sigma);
++	Ring2Utils::addAndEqual(ax, ex, qQ, context.N);
+ 
+-Ciphertext Scheme::encryptMsg(Plaintext& msg) {
++	Ring2Utils::mult(bx, vx, key.bx, qQ, context.N);
++	NumUtils::sampleGauss(ex, context.N, context.sigma);
++	Ring2Utils::addAndEqual(bx, ex, qQ, context.N);
++
++	Ring2Utils::addAndEqual(bx, msg.mx, qQ, context.N);
++
++	Ring2Utils::rightShiftAndEqual(ax, context.logQ, context.N);
++	Ring2Utils::rightShiftAndEqual(bx, context.logQ, context.N);
++
++	return Ciphertext(ax, bx, msg.logp, msg.logq, msg.slots, msg.isComplex);
++}
++
++Ciphertext Scheme::encryptMsg(Plaintext& msg, ZZ seed) {
++    NTL::SetSeed(seed);
+ 	ZZX ax, bx, vx, ex;
+ 	Key key = keyMap.at(ENCRYPTION);
+ 	ZZ qQ = context.qpowvec[msg.logq + context.logQ];
+diff '--color=auto' -ur src/Scheme.h src-mod/Scheme.h
+--- src/Scheme.h	2024-09-19 12:53:12.273964830 -0300
++++ src-mod/Scheme.h	2024-09-19 12:53:10.157280374 -0300
+@@ -146,6 +146,8 @@
+ 	 */
+ 	Ciphertext encryptMsg(Plaintext& msg);
+ 
++    Ciphertext encryptMsg(Plaintext& msg, ZZ seed);
++
+ 	/**
+ 	 * decrypts ciphertext into message
+ 	 * @param[in] secretKey: secret key
