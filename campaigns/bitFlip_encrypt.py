@@ -5,20 +5,22 @@ import matplotlib.pyplot  as plt
 import numpy as np
 from matplotlib.ticker import PercentFormatter
 import seaborn as sns
-
 n = len(sys.argv)
 logN = 4
 if n >1 :
     logN = int(sys.argv[1])
+
 logQ = 35
 if n>2:
     logQ = int(sys.argv[2])
+
 logP = 25
 if n>3:
     logP = int(sys.argv[3])
+
 ringDim = 2**logN
 batchSize = ringDim//2
-num_bitsPerCoeff = 35#logQ+logP+4
+num_bitsPerCoeff = 66
 RNS_size = 1
 seeds = 10
 input_seeds = 1
@@ -38,6 +40,16 @@ dir     = "logs/log_encrypt/"
 
 fileN2_C0     = f"smallEncryptN2_{logN}_{logQ}_{logP}_C0.txt"
 fileN2_C1     = f"smallEncryptN2_{logN}_{logQ}_{logP}_C1.txt"
+if n>5:
+    fileN2_C0     = f"smallEncrypt_smallBatchN2_{logN}_{logQ}_{logP}_C0.txt"
+    fileN2_C1     = f"smallEncrypt_smallBatchN2_{logN}_{logQ}_{logP}_C1.txt"
+    fileN2_real     = f"smallEncode_smallBatchN2_real_{logN}_{logQ}_{logP}.txt"
+    fileDiff     = f"smallEncode_smallBatchDiff_{logN}_{logQ}_{logP}.txt"
+
+
+fileN2_C0 ="smallEncode_smallBatch3_35_25_C0.txt"
+fileN2_C1 ="smallEncode_smallBatch3_35_25_C1.txt"
+fileN2_C0 ="smallEncode_smallBatch3_35_25_C0.txt"
 extra   = ""
 prolog = "img/smallEncrpyt"
 show = True
@@ -58,6 +70,19 @@ width = 5
 ##############################################################################
 print("N2")
 savename = f"N2_{logN}_{num_bitsPerCoeff}"
+if n>4:
+    savename = f"N2_{logN}_{num_bitsPerCoeff}_smallBatch"
+
+df_N2 = pd.read_csv(dir+fileN2_C0,  skiprows=1, header=None, skip_blank_lines=False)
+params =  pd.read_csv(dir+fileN2_C0, nrows=1, header=None, skip_blank_lines=False).values.flatten().tolist()
+logN = params[0]
+logQ = params[1]
+logP = params[2]
+delta = params[3]
+loops = params[4]
+ringDim = 2**logN
+batchSize = ringDim//2
+num_bitsPerCoeff = params[4]
 x0 = np.arange(0, num_bitsPerCoeff*ringDim,1)
 x1 = np.arange(num_bitsPerCoeff*ringDim, 2*num_bitsPerCoeff*ringDim,1)
 

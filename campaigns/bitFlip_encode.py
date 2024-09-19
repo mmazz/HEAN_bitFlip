@@ -64,6 +64,8 @@ for i in range(2, num_coeff+1):
 xticks_label = np.arange(0, (ringDim+1)*num_bitsPerCoeff, num_bitsPerCoeff)
 print(xticks_label)
 width = 5
+
+
 ##############################################################################
 print("N2")
 savename = f"N2_{logN}_{num_bitsPerCoeff}"

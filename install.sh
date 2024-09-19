@@ -7,9 +7,16 @@ mv HEAAN-1.0/HEAAN/* ./
 rm -rf HEAAN-1.0
 echo ""
 echo "Patching"
-mv changes.diff src
+patch_file="changes.diff"
+
+# Verificar si el archivo de parche existe
+if [[ ! -f "$patch_file" ]]; then
+  echo "El archivo de parche '$patch_file' no existe."
+  exit 1
+fi
+
 cd src
-patch -p1 < changes.diff
+patch -p1 < ../changes.diff
 echo "Patching compleate"
 echo ""
 echo "Building"

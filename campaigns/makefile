@@ -1,9 +1,12 @@
-all: clean bitFlip
+all: dirs clean bitFlip
 
+dirs:
+	mkdir -p logs/log_encode
+	mkdir -p logs/log_encrypt
+	mkdir -p bin
 
 small: utils small.cpp
 	g++ small.cpp -o small utils.o -L/usr/local/lib ../lib/libHEAAN.a -lntl -lgmp -lm -std=c++11 -O2 -I/../src -pthread
-
 
 bitFlip: bitFlip_encode bitFlip_encrypt
 
