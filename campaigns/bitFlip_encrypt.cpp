@@ -8,9 +8,8 @@ using namespace NTL;
 // ZZX On output, all coefficients will be integers between 0 and p-1,
 //  OpenFHE no usa enteros con signo para el plaintext... aca si
 //
-
-#define MAX 5
-#define MIN 0
+#define MAX 100
+#define MIN 50
 int main(int argc, char *argv[])
 {
 
@@ -34,21 +33,20 @@ int main(int argc, char *argv[])
     long logSlots = logN - 1;
 	long slots = pow(2, logSlots);
 
-    std::cout << "logN: " << logN << " Slots: " << slots << " Ringdim: " << ringDim << " slots: " << slots<< std::endl;
-    string prelog = "logs/log_encrypt/smallEncryptN2_";
-    if (argc>5 && std::stoi(argv[5])>=1)
+    string prelog = "logs/log_encrypt/HEAAN_";
+    if (argc>4 && std::stoi(argv[4])>=1)
     {
-        slots = slots >> std::stoi(argv[5]);
-        prelog = "logs/log_encrypt/smallEncode_smallBatch";
+        slots = slots >> std::stoi(argv[4]);
     }
 
-    string fileC0 = to_string(logN) + "_" + to_string(logQ) + "_" + to_string(logP)+ "_C0.txt";
-    string fileC1 = to_string(logN) + "_" + to_string(logQ) + "_" + to_string(logP)+ "_C1.txt";
+    std::cout << "logN: " << logN << " logQ: " << logQ << " logP: " << logP << " Ringdim: " << ringDim << " slots: " << slots<< std::endl;
+    string fileC0 = to_string(logN) + "_" + to_string(logQ) + "_" + to_string(logP)+ "_" + to_string(slots)+"_C0.txt";
+    string fileC1 = to_string(logN) + "_" + to_string(logQ) + "_" + to_string(logP)+ "_" + to_string(slots)+"_C1.txt";
     ofstream norm2FileC0(prelog+fileC0);
     ofstream norm2FileC1(prelog+fileC1);
     std::ostringstream buffer;
     size_t loops = 10;
-    if (argc>4)
+    if (argc>5)
         loops = std::stoi(argv[4]);
     int max = 0;
     ZZ delta = ZZ(0);

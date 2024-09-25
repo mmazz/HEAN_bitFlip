@@ -33,16 +33,15 @@ int main(int argc, char *argv[])
     long logSlots = logN - 1;
 	long slots = pow(2, logSlots);
 
-    std::cout << "logN: " << logN << " Slots: " << slots << " Ringdim: " << ringDim << " slots: " << slots<< std::endl;
-    string prelog = "logs/log_encode/smallEncode";
-    if (argc>5 && std::stoi(argv[5])>=1)
+    string prelog = "logs/log_encode/HEAAN_";
+    if (argc>4 && std::stoi(argv[4])>=1)
     {
-        slots = slots >> std::stoi(argv[5]);
-        prelog = "logs/log_encode/smallEncode_smallBatch";
+        slots = slots >> std::stoi(argv[4]);
     }
-    string fileN2 = "N2_"+to_string(logN) + "_" + to_string(logQ) + "_" + to_string(logP)+ ".txt";
-    string fileN2_real = "N2_real_"+to_string(logN) + "_" + to_string(logQ) + "_" + to_string(logP)+ ".txt";
-    string fileDiff = "Diff_"+to_string(logN) + "_" + to_string(logQ) + "_" + to_string(logP)+ ".txt";
+    std::cout << "logN: " << logN << " logQ: " << logQ << " logP: " << logP << " Ringdim: " << ringDim << " slots: " << slots<< std::endl;
+    string fileN2 = "N2_"+to_string(logN) + "_" + to_string(logQ) + "_" + to_string(logP)+ "_" + to_string(slots)+".txt";
+    string fileN2_real = "N2_real_"+to_string(logN) + "_" + to_string(logQ) + "_" + to_string(logP)+ "_" + to_string(slots)+".txt";
+    string fileDiff = "Diff_"+to_string(logN) + "_" + to_string(logQ) + "_" + to_string(logP)+ "_" + to_string(slots)+".txt";
     ofstream norm2File(prelog+fileN2);
     ofstream norm2_realFile(prelog+fileN2_real);
     ofstream diffFile(prelog+fileDiff);
@@ -51,8 +50,8 @@ int main(int argc, char *argv[])
     std::ostringstream bufferN2_real;
     std::ostringstream bufferDiff;
     size_t loops = 10;
-    if (argc>4)
-        loops = std::stoi(argv[4]);
+    if (argc>5)
+        loops = std::stoi(argv[5]);
     int max = 0;
     ZZ delta = ZZ(0);
     ZZ temp_delta = ZZ(0);
@@ -93,6 +92,7 @@ int main(int argc, char *argv[])
     std::cout << "Max bits " << word << std::endl;
     std::cout << std::endl;
     norm2File << logN << ", " << logQ << ", " << logP << ", " << delta << ", " << word << ", " << loops <<std::endl;  // Write the buffer to file
+    norm2_realFile << logN << ", " << logQ << ", " << logP << ", " << delta << ", " << word << ", " << loops <<std::endl;  // Write the buffer to file
     for (size_t k=1; k<loops+1; k++)
     {
         std::cout << k << std::endl;

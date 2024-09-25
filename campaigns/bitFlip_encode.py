@@ -18,6 +18,11 @@ if n>2:
 logP = 25
 if n>3:
     logP = int(sys.argv[3])
+slots = 2**(logN-1)
+if n>4:
+    slots = slots >> int(sys.argv[4])
+
+
 ringDim = 2**logN
 batchSize = ringDim//2
 num_bitsPerCoeff = 66
@@ -38,16 +43,13 @@ plt.rc('legend', fontsize=SMALL_SIZE)    # legend fontsize
 plt.rc('figure', titlesize=BIGGER_SIZE)  # fontsize of the figure title
 dir     = "logs/log_encode/"
 
-fileN2     = f"smallEncodeN2_{logN}_{logQ}_{logP}.txt"
-fileN2_real     = f"smallEncodeN2_real_{logN}_{logQ}_{logP}.txt"
-fileDiff     = f"smallEncodeDiff_{logN}_{logQ}_{logP}.txt"
+fileN2     =  f"HEAAN_N2_{logN}_{logQ}_{logP}_{slots}.txt"
+fileN2_real = f"HEAAN_N2_real_{logN}_{logQ}_{logP}_{slots}.txt"
+fileDiff    = f"HEAAN_Diff_{logN}_{logQ}_{logP}_{slots}.txt"
 
-if n>5:
-    fileN2     = f"smallEncode_smallBatchN2_{logN}_{logQ}_{logP}.txt"
-    fileN2_real     = f"smallEncode_smallBatchN2_real_{logN}_{logQ}_{logP}.txt"
-    fileDiff     = f"smallEncode_smallBatchDiff_{logN}_{logQ}_{logP}.txt"
+
 extra   = ""
-prolog = "img/smallEncode"
+prolog = "img/HEAAN"
 show = True
 
 loops = seeds * input_seeds
@@ -56,23 +58,16 @@ num_coeff = int(ringDim*RNS_size)
 
 num_bits = num_coeff * num_bitsPerCoeff
 
-labels = [str(0), str(num_bitsPerCoeff)]
-for i in range(2, num_coeff+1):
-    labels.append(str(i)+f"x{num_bitsPerCoeff}")
 
-
-xticks_label = np.arange(0, (ringDim+1)*num_bitsPerCoeff, num_bitsPerCoeff)
-print(xticks_label)
 width = 5
 
 
 ##############################################################################
 print("N2")
-savename = f"N2_{logN}_{num_bitsPerCoeff}"
-if n>4:
-    savename = f"N2_{logN}_{num_bitsPerCoeff}_smallBatch"
-df_N2 = pd.read_csv(dir+fileN2,  skiprows=1, header=None, skip_blank_lines=False)
-params =  pd.read_csv(dir+fileN2, nrows=1, header=None, skip_blank_lines=False).values.flatten().tolist()
+savename = f"N2_{logN}_{num_bitsPerCoeff}_{slots}"
+
+df_N2 = pd.read_csv(dir+fileN2_real,  skiprows=1, header=None, skip_blank_lines=False)
+params =  pd.read_csv(dir+fileN2_real, nrows=1, header=None, skip_blank_lines=False).values.flatten().tolist()
 logN = params[0]
 logQ = params[1]
 logP = params[2]
@@ -81,12 +76,34 @@ loops = params[4]
 ringDim = 2**logN
 batchSize = ringDim//2
 num_bitsPerCoeff = params[4]
+labels = [str(0), str(num_bitsPerCoeff)]
+for i in range(2, num_coeff+1):
+    labels.append(str(i)+f"x{num_bitsPerCoeff}")
+xticks_label = np.arange(0, (ringDim+1)*num_bitsPerCoeff, num_bitsPerCoeff)
+
 dataN2 = df_N2.to_numpy(dtype='float64')
 stdN2 = np.std(dataN2, axis=0)
 dataN2_mean = np.mean(dataN2, axis=0)
-print(len(dataN2_mean))
 x = np.arange(0, num_bitsPerCoeff*ringDim,1)
-plt.plot(x,  dataN2_mean, linewidth=width, label=f"Delta = {delta}")
+if(num_bitsPerCoeff>64):
+    print("Reshape")
+    print(len(x))
+    x = np.arange(0, 64*ringDim,1)
+    labels = [str(0), str(64)]
+    for i in range(2, num_coeff+1):
+        labels.append(str(i)+f"x{64}")
+    xticks_label = np.arange(0, (ringDim+1)*64, 64)
+    print(len(x))
+
+    data_reshaped = dataN2_mean.reshape(-1, num_bitsPerCoeff)
+    new_arr = data_reshaped[:, :64]
+    dataN2_mean= new_arr.flatten()
+
+    std_reshaped = stdN2.reshape(-1, num_bitsPerCoeff)
+    newstd_arr = std_reshaped[:, :64]
+    stdN2= newstd_arr.flatten()
+
+plt.plot(x,  dataN2_mean, linewidth=width, label=f"Delta = 2^{delta}")
 #plt.scatter(x,  dataN2_mean_30, linewidth=width, label="Delta = 25")
 plt.errorbar(x, dataN2_mean, stdN2, linestyle='None', marker='^', color="orange")
 plt.ylabel('Norm 2')
