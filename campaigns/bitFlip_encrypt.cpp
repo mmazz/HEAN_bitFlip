@@ -40,11 +40,17 @@ int main(int argc, char *argv[])
     }
 
     std::cout << "logN: " << logN << " logQ: " << logQ << " logP: " << logP << " Ringdim: " << ringDim << " slots: " << slots<< std::endl;
-    string fileC0 = to_string(logN) + "_" + to_string(logQ) + "_" + to_string(logP)+ "_" + to_string(slots)+"_C0.txt";
-    string fileC1 = to_string(logN) + "_" + to_string(logQ) + "_" + to_string(logP)+ "_" + to_string(slots)+"_C1.txt";
+    string fileC0 = "N2_" + to_string(logN) + "_" + to_string(logQ) + "_" + to_string(logP)+ "_" + to_string(slots)+"_C0.txt";
+    string fileC1 = "N2_" + to_string(logN) + "_" + to_string(logQ) + "_" + to_string(logP)+ "_" + to_string(slots)+"_C1.txt";
+    string fileN2_real_C0 = "N2_real_"+to_string(logN) + "_" + to_string(logQ) + "_" + to_string(logP)+ "_" + to_string(slots)+"_C0.txt";
+    string fileN2_real_C1 = "N2_real_"+to_string(logN) + "_" + to_string(logQ) + "_" + to_string(logP)+ "_" + to_string(slots)+"_C1.txt";
     ofstream norm2FileC0(prelog+fileC0);
     ofstream norm2FileC1(prelog+fileC1);
+
+    ofstream norm2File_realC0(prelog+fileN2_real_C0);
+    ofstream norm2File_realC1(prelog+fileN2_real_C1);
     std::ostringstream buffer;
+    std::ostringstream buffer_real;
     size_t loops = 10;
     if (argc>5)
         loops = std::stoi(argv[4]);
@@ -88,6 +94,7 @@ int main(int argc, char *argv[])
     std::cout << "Max bits " << word << std::endl;
     std::cout << std::endl;
     norm2FileC0 << logN << ", " << logQ << ", " << logP << ", " << delta << ", " << word << ", " << loops <<std::endl;  // Write the buffer to file
+    norm2File_realC0<< logN << ", " << logQ << ", " << logP << ", " << delta << ", " << word << ", " << loops <<std::endl;  // Write the buffer to file
     for (size_t k=1; k<loops+1; k++)
     {
         NTL::ZZ seed;
@@ -171,7 +178,9 @@ int main(int argc, char *argv[])
                     cipher.bx[i] = bit_flip(cipher.bx[i], bit, max);
                     dvec = scheme.decrypt(sk, cipher);
                     double norm = norm2(golden_val, dvec, slots);
+                    double norm_real = norm2_real(golden_val, dvec, slots);
                     buffer << norm;
+                    buffer_real << norm_real;
                     count++;
                 }
             }
@@ -180,6 +189,10 @@ int main(int argc, char *argv[])
             buffer.str("");        // Clear the buffer
             buffer.clear();
 
+            buffer_real << "\n";
+            norm2File_realC0 << buffer_real.str();  // Write the buffer to file
+            buffer_real.str("");        // Clear the buffer
+            buffer_real.clear();
             count = 0;
             for (size_t i=0; i<ringDim; i++)
             {
@@ -191,7 +204,9 @@ int main(int argc, char *argv[])
                     cipher.ax[i] = bit_flip(cipher.ax[i], bit, max);
                     dvec = scheme.decrypt(sk, cipher);
                     double norm = norm2(golden_val, dvec, slots);
+                    double norm_real = norm2_real(golden_val, dvec, slots);
                     buffer << norm;
+                    buffer_real << norm_real;
                     count++;
                 }
             }
@@ -199,6 +214,10 @@ int main(int argc, char *argv[])
             norm2FileC1 << buffer.str();  // Write the buffer to file
             buffer.str("");        // Clear the buffer
             buffer.clear();
+            buffer_real << "\n";
+            norm2File_realC1 << buffer_real.str();  // Write the buffer to file
+            buffer_real.str("");        // Clear the buffer
+            buffer_real.clear();
         }
         else
             std::cout<< "ERROR!" << std::endl;
@@ -206,5 +225,7 @@ int main(int argc, char *argv[])
     }
     norm2FileC0.close();
     norm2FileC1.close();
+    norm2File_realC0.close();
+    norm2File_realC1.close();
     return 0;
 }

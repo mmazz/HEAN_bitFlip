@@ -41,7 +41,7 @@ plt.rc('xtick', labelsize=MEDIUM_SIZE)    # fontsize of the tick labels
 plt.rc('ytick', labelsize=MEDIUM_SIZE)    # fontsize of the tick labels
 plt.rc('legend', fontsize=SMALL_SIZE)    # legend fontsize
 plt.rc('figure', titlesize=BIGGER_SIZE)  # fontsize of the figure title
-dir     = "logs/log_encode/"
+dir     = "../logs/log_encode/"
 
 fileN2     =  f"HEAAN_N2_{logN}_{logQ}_{logP}_{slots}.txt"
 fileN2_real = f"HEAAN_N2_real_{logN}_{logQ}_{logP}_{slots}.txt"
@@ -49,7 +49,7 @@ fileDiff    = f"HEAAN_Diff_{logN}_{logQ}_{logP}_{slots}.txt"
 
 
 extra   = ""
-prolog = "img/HEAAN"
+prolog = "img/HEAAN_Encode_"
 show = True
 
 loops = seeds * input_seeds
@@ -64,7 +64,7 @@ width = 5
 
 ##############################################################################
 print("N2")
-savename = f"N2_{logN}_{num_bitsPerCoeff}_{slots}"
+savename = f"N2_{logN}_{logQ}_{logP}_{slots}"
 
 df_N2 = pd.read_csv(dir+fileN2_real,  skiprows=1, header=None, skip_blank_lines=False)
 params =  pd.read_csv(dir+fileN2_real, nrows=1, header=None, skip_blank_lines=False).values.flatten().tolist()
@@ -72,37 +72,32 @@ logN = params[0]
 logQ = params[1]
 logP = params[2]
 delta = params[3]
-loops = params[4]
+num_bitsPerCoeff = params[4]
+loops = params[5]
 ringDim = 2**logN
 batchSize = ringDim//2
-num_bitsPerCoeff = params[4]
+
+dataN2 = df_N2.to_numpy(dtype='float64')
+stdN2 = np.std(dataN2, axis=0)
+dataN2_mean = np.mean(dataN2, axis=0)
+
+
+if(num_bitsPerCoeff>64):
+    resizesing = np.resize(dataN2_mean, (ringDim, num_bitsPerCoeff))
+    resizesing = resizesing[:, :64]
+    dataN2_mean_C0 = resizesing.flatten()
+    resizesing = np.resize(stdN2, (ringDim, num_bitsPerCoeff))
+    resizesing = resizesing[:, :64]
+    stdN2_C0= resizesing.flatten()
+    num_bitsPerCoeff = 64
+
 labels = [str(0), str(num_bitsPerCoeff)]
 for i in range(2, num_coeff+1):
     labels.append(str(i)+f"x{num_bitsPerCoeff}")
 xticks_label = np.arange(0, (ringDim+1)*num_bitsPerCoeff, num_bitsPerCoeff)
 
-dataN2 = df_N2.to_numpy(dtype='float64')
-stdN2 = np.std(dataN2, axis=0)
-dataN2_mean = np.mean(dataN2, axis=0)
+
 x = np.arange(0, num_bitsPerCoeff*ringDim,1)
-if(num_bitsPerCoeff>64):
-    print("Reshape")
-    print(len(x))
-    x = np.arange(0, 64*ringDim,1)
-    labels = [str(0), str(64)]
-    for i in range(2, num_coeff+1):
-        labels.append(str(i)+f"x{64}")
-    xticks_label = np.arange(0, (ringDim+1)*64, 64)
-    print(len(x))
-
-    data_reshaped = dataN2_mean.reshape(-1, num_bitsPerCoeff)
-    new_arr = data_reshaped[:, :64]
-    dataN2_mean= new_arr.flatten()
-
-    std_reshaped = stdN2.reshape(-1, num_bitsPerCoeff)
-    newstd_arr = std_reshaped[:, :64]
-    stdN2= newstd_arr.flatten()
-
 plt.plot(x,  dataN2_mean, linewidth=width, label=f"Delta = 2^{delta}")
 #plt.scatter(x,  dataN2_mean_30, linewidth=width, label="Delta = 25")
 plt.errorbar(x, dataN2_mean, stdN2, linestyle='None', marker='^', color="orange")
