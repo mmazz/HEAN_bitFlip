@@ -53,7 +53,7 @@ int main(int argc, char *argv[])
     std::ostringstream buffer_real;
     size_t loops = 10;
     if (argc>5)
-        loops = std::stoi(argv[4]);
+        loops = std::stoi(argv[5]);
     int max = 0;
     ZZ delta = ZZ(0);
     ZZ temp_delta = ZZ(0);
@@ -173,7 +173,10 @@ int main(int argc, char *argv[])
                 for (size_t bit=0; bit<max; bit++)
                 {
                     if(count>0)
+                    {
                         buffer << ", ";
+                        buffer_real << ", ";
+                    }
                     cipher = scheme.encryptMsg(plain, seed);
                     cipher.bx[i] = bit_flip(cipher.bx[i], bit, max);
                     dvec = scheme.decrypt(sk, cipher);
@@ -199,7 +202,10 @@ int main(int argc, char *argv[])
                 for (size_t bit=0; bit<max; bit++)
                 {
                     if(count>0)
+                    {
                         buffer << ", ";
+                        buffer_real << ", ";
+                    }
                     cipher = scheme.encryptMsg(plain, seed);
                     cipher.ax[i] = bit_flip(cipher.ax[i], bit, max);
                     dvec = scheme.decrypt(sk, cipher);

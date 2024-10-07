@@ -78,19 +78,20 @@ num_coeff = int(2*ringDim*RNS_size)
 
 num_bits = num_coeff * num_bitsPerCoeff
 
-df_N2_C0 = pd.read_csv(dir+fileN2_C0,  skiprows=1, header=None, skip_blank_lines=False)
+df_N2_C0 = pd.read_csv(dir+fileN2_real_C0,  skiprows=1, header=None, skip_blank_lines=False)
 dataN2_C0 = df_N2_C0.to_numpy(dtype='float64')
 print(type(dataN2_C0))
 
 stdN2_C0 = np.std(dataN2_C0, axis=0)
 dataN2_mean_C0 = np.mean(dataN2_C0, axis=0)
 
-df_N2_C1 = pd.read_csv(dir+fileN2_C1, header=None, skip_blank_lines=False)
+df_N2_C1 = pd.read_csv(dir+fileN2_real_C1, header=None, skip_blank_lines=False)
 dataN2_C1 = df_N2_C1.to_numpy(dtype='float64')
 stdN2_C1 = np.std(dataN2_C1, axis=0)
 dataN2_mean_C1 = np.mean(dataN2_C1, axis=0)
 
 if(num_bitsPerCoeff>64):
+    print("Resizing")
     resizesing = np.resize(dataN2_mean_C0, (ringDim, num_bitsPerCoeff))
     resizesing = resizesing[:, :64]
     dataN2_mean_C0 = resizesing.flatten()
@@ -104,8 +105,8 @@ if(num_bitsPerCoeff>64):
     resizesing = np.resize(stdN2_C1, (ringDim, num_bitsPerCoeff))
     resizesing = resizesing[:, :64]
     stdN2_C1= resizesing.flatten()
-
     num_bitsPerCoeff = 64
+
 labels = [str(0), str(num_bitsPerCoeff)]
 for i in range(2, num_coeff//2+1):
     labels.append(str(i)+f"x{num_bitsPerCoeff}")
@@ -119,8 +120,8 @@ x = np.arange(0, 2*num_bitsPerCoeff*ringDim,1)
 print(type(dataN2_mean_C0))
 
 
-plt.plot(x[:len(x)//2],  dataN2_mean_C0, linewidth=width, color='steelblue', label="Delta = 25")
-plt.plot(x[len(x)//2:],  dataN2_mean_C1, linewidth=width, color='firebrick', label="Delta = 25")
+plt.plot(x[:len(x)//2],  dataN2_mean_C0, linewidth=width, color='steelblue', label=f"Delta = {logP}")
+plt.plot(x[len(x)//2:],  dataN2_mean_C1, linewidth=width, color='firebrick', label=f"logQ = {logQ}")
 #plt.scatter(x,  dataN2_mean_30, linewidth=width, label="Delta = 25")
 plt.errorbar(x[:len(x)//2], dataN2_mean_C0, stdN2_C0, linestyle='None', marker='^', color="orange")
 plt.errorbar(x[len(x)//2:], dataN2_mean_C1, stdN2_C1, linestyle='None', marker='^', color="orange")
